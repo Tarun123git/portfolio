@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarun Savalapurapu</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lobster+Two:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.9.0/fonts/remixicon.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="cursor"></div>
+    <div id="progress-bar"></div>
+    <div id="page1">
+        <!-- Star canvas background -->
+        <canvas id="stars-canvas"></canvas>
+
+        <!-- Purple glow orbs -->
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+
+        <div id="nav">
+            <h1>ST</h1>
+            <div id="nav-links">
+                <a href="mailto:hellotarun7890@gmail.com">hellotarun7890@gmail.com</a>
+                <a href="#about">ABOUT</a>
+                <a href="#work">WORK</a>
+                <a href="#contact">CONTACT</a>
+            </div>
+            <i class="ri-menu-3-line" id="menu-btn"></i>
+        </div>
+
+        <div id="social-sidebar">
+            <a href="https://github.com/Tarun123git" target="_blank"><i class="ri-github-line"></i></a>
+            <a href="https://www.linkedin.com/in/tarunsavalapurapu/" target="_blank"><i class="ri-linkedin-line"></i></a>
+            <a href="https://twitter.com/Tarun8121" target="_blank"><i class="ri-twitter-x-line"></i></a>
+            <a href="https://www.instagram.com/star_run2005/" target="_blank"><i class="ri-instagram-line"></i></a>
+        </div>
+
+        <div id="mobile-menu">
+            <i class="ri-close-line" id="mobile-close"></i>
+            <a href="mailto:hellotarun7890@gmail.com">GMAIL</a>
+            <a href="#about">ABOUT</a>
+            <a href="#work">WORK</a>
+            <a href="#contact">CONTACT</a>
+        </div>
+
+        <div id="hello">
+            <div class="hello-text">
+                <p class="hello-tag">Hello, I'm</p>
+                <h1>TARUN <br> SAVALAPURAPU</h1>
+                <p class="hero-desc">I turn complex ideas into seamless, high-impact
+                web experiences &mdash; building modern, scalable,
+                and lightning-fast applications that make a difference.</p>
+                <a href="#contact" class="cta-btn">CONTACT ME <i class="ri-arrow-right-up-line"></i></a>
+            </div>
+
+            <div class="hero-img-wrap">
+                <div class="hero-img-ring">
+                    <img src="https://avatars.githubusercontent.com/u/222999720?v=4" alt="Tarun Savalapurapu" class="hero-photo">
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom separator -->
+        <a href="#about" class="hero-separator">
+            <div class="separator-inner">
+                <i class="ri-focus-3-line"></i>
+                <span>ABOUT <strong>ME</strong></span>
+            </div>
+        </a>
+    </div>
+    <div id="page2">
+        <div id="about">
+            <div class="about-header">
+                <h2>ABOUT <span>ME</span></h2>
+                <div class="about-line"></div>
+            </div>
+
+            <div class="about-grid">
+                <!-- Bio Card -->
+                <div class="about-card bio-card">
+                    <div class="card-icon"><i class="ri-user-line"></i></div>
+                    <h3>Who I Am</h3>
+                    <p>I'm a passionate Computer Science Engineering student with a strong interest in web
+                        development and modern technologies. I enjoy building responsive and interactive websites.
+                    </p>
+                </div>
+
+                <!-- Focus Card -->
+                <div class="about-card focus-card">
+                    <div class="card-icon"><i class="ri-focus-3-line"></i></div>
+                    <h3>What I'm Doing</h3>
+                    <p>Currently focused on improving my frontend skills, learning the MERN stack, and creating
+                        creative portfolio projects that combine smooth UI design with animations.</p>
+                </div>
+
+                <!-- Goal Card -->
+                <div class="about-card goal-card">
+                    <div class="card-icon"><i class="ri-rocket-line"></i></div>
+                    <h3>My Goal</h3>
+                    <p>I love solving problems, exploring new technologies, and continuously upgrading my skills to
+                        become a professional software developer in the tech industry.</p>
+                </div>
+            </div>
+            <div class="skills-section">
+                <h2 class="skills-heading">TECH <span>STACK</span></h2>
+                <div class="skills-track-wrapper">
+                    <div class="skills-track">
+                        <div class="skill-item"><i class="devicon-html5-plain colored"></i><span>HTML</span></div>
+                        <div class="skill-item"><i class="devicon-css3-plain colored"></i><span>CSS</span></div>
+                        <div class="skill-item"><i class="devicon-javascript-plain colored"></i><span>JavaScript</span>
+                        </div>
+                        <div class="skill-item"><i class="devicon-react-original colored"></i><span>React</span></div>
+                        <div class="skill-item"><i class="devicon-nodejs-plain colored"></i><span>Node.js</span></div>
+                        <div class="skill-item"><i class="devicon-mongodb-plain colored"></i><span>MongoDB</span></div>
+                        <div class="skill-item"><i class="devicon-github-original colored"></i><span>GitHub</span>
+                        </div>
+                        <div class="skill-item"><i class="devicon-git-plain colored"></i><span>Git</span></div>
+                        <div class="skill-item"><i class="devicon-vscode-plain colored"></i><span>VS Code</span></div>
+                        <!-- duplicates for seamless loop -->
+                        <div class="skill-item"><i class="devicon-html5-plain colored"></i><span>HTML</span></div>
+                        <div class="skill-item"><i class="devicon-css3-plain colored"></i><span>CSS</span></div>
+                        <div class="skill-item"><i class="devicon-javascript-plain colored"></i><span>JavaScript</span>
+                        </div>
+                        <div class="skill-item"><i class="devicon-react-original colored"></i><span>React</span></div>
+                        <div class="skill-item"><i class="devicon-nodejs-plain colored"></i><span>Node.js</span></div>
+                        <div class="skill-item"><i class="devicon-mongodb-plain colored"></i><span>MongoDB</span></div>
+                        <div class="skill-item"><i class="devicon-github-original colored"></i><span>Git & GitHub</span>
+                        </div>
+                        <div class="skill-item"><i class="devicon-git-plain colored"></i><span>Git</span></div>
+                        <div class="skill-item"><i class="devicon-vscode-plain colored"></i><span>VS Code</span></div>
+                    </div>
+                </div>
+
+            </div>
+            <div id="sidebar-glow"></div>
+
+        </div>
+    </div>
+    <div id="page3">
+        <div id="work">
+            <div class="work-header">
+                <h2>MY <span>WORK</span></h2>
+                <div class="about-line"></div>
+            </div>
+
+            <div class="work-grid">
+                <div class="work-card">
+                    <div class="work-card-img">
+                        <i class="ri-code-box-line"></i>
+                    </div>
+                    <div class="work-card-info">
+                        <h3>Portfolio Website</h3>
+                        <p>A personal portfolio built with HTML, CSS, JavaScript and GSAP animations.</p>
+                        <div class="work-tags">
+                            <span>HTML</span>
+                            <span>CSS</span>
+                            <span>GSAP</span>
+                        </div>
+                        <div class="work-links">
+                            <a href="https://github.com/Tarun123git" target="_blank"><i class="ri-github-line"></i>
+                                Code</a>
+                            <a href="#"><i class="ri-external-link-line"></i> Live</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="work-card coming-soon">
+                    <div class="work-card-img">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <div class="work-card-info">
+                        <h3>Coming Soon</h3>
+                        <p>Currently working on something exciting. Stay tuned!</p>
+                    </div>
+                </div>
+
+                <div class="work-card coming-soon">
+                    <div class="work-card-img">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <div class="work-card-info">
+                        <h3>Coming Soon</h3>
+                        <p>Currently working on something exciting. Stay tuned!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page4">
+    <div id="contact">
+        <div class="contact-header">
+            <h2>GET IN <span>TOUCH</span></h2>
+            <div class="about-line"></div>
+        </div>
+
+        <div class="contact-wrapper">
+            <div class="contact-left">
+                <h3>Let's Build Something Amazing Together</h3>
+                <p>I'm always open to new opportunities, collaborations, and exciting projects. Whether you have a idea, a project in mind, or just want to say hi — my inbox is always open. Let's turn ideas into reality!</p>
+
+                <div class="contact-links">
+                    <a href="mailto:hellotarun7890@gmail.com">
+                        <i class="ri-mail-line"></i>
+                        hellotarun7890@gmail.com
+                    </a>
+                    <a href="https://github.com/Tarun123git" target="_blank">
+                        <i class="ri-github-line"></i>
+                        github.com/Tarun123git
+                    </a>
+                    <a href="https://www.linkedin.com/in/tarunsavalapurapu/" target="_blank">
+                        <i class="ri-linkedin-line"></i>
+                        linkedin.com/in/tarunsavalapurapu
+                    </a>
+                    <a href="https://twitter.com/Tarun8121" target="_blank">
+                        <i class="ri-twitter-x-line"></i>
+                        twitter.com/Tarun8121
+                    </a>
+                    <a href="https://www.instagram.com/star_run2005/" target="_blank">
+                        <i class="ri-instagram-line"></i>
+                        instagram.com/star_run2005
+                    </a>
+                </div>
+            </div>
+
+            <div class="contact-right">
+                <form class="contact-form">
+                    <div class="form-group">
+                        <input type="text" placeholder="Your Name" />
+                    </div>
+                    <div class="form-group">
+                        <input type="email" placeholder="Your Email" />
+                    </div>
+                    <div class="form-group">
+                        <textarea rows="5" placeholder="Your Message"></textarea>
+                    </div>
+                    <button type="submit">Send Message <i class="ri-send-plane-line"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Designed & Built by <span>Tarun Savalapurapu</span> © 2026</p>
+    </footer>
+</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"
+        integrity="sha512-NcZdtrT77bJr4STcmsGAESr06BYGE8woZdSdEgqnpyqac7sugNO+Tr4bGwGF3MsnEkGKhU2KL2xh6Ec+BqsaHA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+
+</html>
