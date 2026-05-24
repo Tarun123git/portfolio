@@ -83,7 +83,28 @@ document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>
 })();
 
 // LETTER ANIMATION (removed - using CSS animations now)
-
+if (window.innerWidth > 768) {
+    document.addEventListener("mousemove", (e) => {
+        gsap.to(".hello-text", {
+            rotationY: (e.clientX / window.innerWidth - 0.5) * 25,
+            rotationX: -(e.clientY / window.innerHeight - 0.5) * 25,
+            transformPerspective: 1200,
+            transformOrigin: "center",
+            duration: 0.8,
+            ease: "power3.out"
+        });
+    });
+} else {
+    gsap.to(".hello-text", {
+        rotationY: 8,
+        rotationX: -8,
+        y: -10,
+        repeat: -1,
+        yoyo: true,
+        duration: 2,
+        ease: "sine.inOut"
+    });
+}
 // ENTRANCE ANIMATION
 const tl = gsap.timeline();
 

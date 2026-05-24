@@ -239,12 +239,14 @@ body {
     flex-direction: column;
     gap: 1.4rem;
     max-width: 55%;
+    transform-style: preserve-3d;
+    will-change: transform;
 }
 
 .hello-tag {
-    font-size: clamp(1rem, 1.5vw, 1.3rem);
+    font-size: clamp(2rem, 2vw, 2rem);
     color: #a855f7;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.04em;
     opacity: 0;
     animation: fade-up 0.7s ease 0.3s forwards;
