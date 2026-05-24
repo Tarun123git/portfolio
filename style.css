@@ -1092,4 +1092,11 @@ footer span {
     .about-card p {
         font-size: 0.82rem;
     }
+
+    .about-card,
+    .about-header h2,
+    .about-line {
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }

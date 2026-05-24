@@ -1,4 +1,5 @@
 gsap.registerPlugin(ScrollTrigger);
+ScrollTrigger.config({ ignoreMobileResize: true });
 // CURSOR
 const cursor = document.querySelector("#cursor");
 
@@ -146,7 +147,7 @@ mobileMenu.querySelectorAll("a").forEach(a => {
 gsap.from(".about-header h2, .about-line", {
     scrollTrigger: {
         trigger: "#about",
-        start: "top 80%"
+        start: "top 95%"
     },
     y: 40,
     opacity: 0,
@@ -158,7 +159,7 @@ gsap.from(".about-header h2, .about-line", {
 gsap.from(".about-card", {
     scrollTrigger: {
         trigger: ".about-grid",
-        start: "top 80%"
+        start: "top 95%"
     },
     y: 60,
     opacity: 0,
