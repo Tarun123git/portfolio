@@ -37,16 +37,6 @@ document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>
 
 });
 
-// Hide cursor only when form fields are focused (mobile keyboard tap fix)
-document.querySelectorAll("input, textarea").forEach((field) => {
-    field.addEventListener("focus", () => {
-        gsap.to(cursor, { opacity: 0, duration: 0.2 });
-    });
-    field.addEventListener("blur", () => {
-        gsap.to(cursor, { opacity: 1, duration: 0.2 });
-    });
-});
-
 // STAR CANVAS
 (function() {
     const canvas = document.getElementById('stars-canvas');
@@ -320,3 +310,58 @@ window.onscroll = () => {
         progress + "%";
 
 };
+// CONTACT FORM - FORMSPREE
+const contactForm = document.querySelector(".contact-form");
+
+contactForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const btn = contactForm.querySelector("button");
+  const name = contactForm.querySelector("input[type='text']").value.trim();
+  const email = contactForm.querySelector("input[type='email']").value.trim();
+  const message = contactForm.querySelector("textarea").value.trim();
+
+  if (!name || !email || !message) {
+    showToast("Please fill in all fields.", "error");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `Sending... <i class="ri-loader-4-line"></i>`;
+
+  try {
+    const res = await fetch("https://formspree.io/f/xjgzodow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, message }),
+    });
+
+    if (res.ok) {
+      showToast("Message sent! I'll get back to you soon.", "success");
+      contactForm.reset();
+    } else {
+      showToast("Something went wrong. Try again.", "error");
+    }
+  } catch (err) {
+    showToast("Network error. Please try again.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `Send Message <i class="ri-send-plane-line"></i>`;
+  }
+});
+
+function showToast(msg, type) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.classList.add("toast-visible"), 10);
+  setTimeout(() => {
+    toast.classList.remove("toast-visible");
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
+}

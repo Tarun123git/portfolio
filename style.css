@@ -1102,3 +1102,36 @@ footer span {
         transform: none !important;
     }
 }
+/* TOAST NOTIFICATION */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 0.9rem 1.8rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 99999;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.toast-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-success {
+  background: linear-gradient(90deg, #8a2be2, #4b6cff);
+  color: white;
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+}
+
+.toast-error {
+  background: rgba(220, 50, 50, 0.9);
+  color: white;
+  box-shadow: 0 0 30px rgba(220, 50, 50, 0.4);
+}
