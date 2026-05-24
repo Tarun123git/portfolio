@@ -310,6 +310,16 @@ window.onscroll = () => {
         progress + "%";
 
 };
+// Hide cursor on form focus (mobile fix)
+document.querySelectorAll("input, textarea").forEach((field) => {
+  field.addEventListener("focus", () => {
+    cursor.style.display = "none";
+  });
+  field.addEventListener("blur", () => {
+    cursor.style.display = "block";
+  });
+});
+
 // CONTACT FORM - FORMSPREE
 const contactForm = document.querySelector(".contact-form");
 
