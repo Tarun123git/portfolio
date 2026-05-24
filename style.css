@@ -1052,9 +1052,9 @@ footer span {
     }
 
     #nav {
-        backdrop-filter: none;
-        background: #1a1a1a;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        background: rgba(7, 4, 15, 0.8);
+        border-bottom: 1px solid rgba(138, 43, 226, 0.2);
     }
 
     .work-grid {
