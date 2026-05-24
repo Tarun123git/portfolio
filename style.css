@@ -990,18 +990,14 @@ footer span {
         display: none;
     }
 
-    #hello h1 {
-        font-size: clamp(2rem, 10vw, 3.5rem);
-    }
-
     #hello {
-        flex-direction: column-reverse;
+        flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: 90px 5vw 1rem;
-        gap: 1.5rem;
+        padding: 100px 5vw 2rem;
+        gap: 1.2rem;
         height: auto;
-        padding-bottom: 2rem;
+        flex: 0 0 auto;
     }
 
     .hello-text {
@@ -1011,8 +1007,8 @@ footer span {
     }
 
     .hero-img-ring {
-        width: 220px;
-        height: 220px;
+        width: 180px;
+        height: 180px;
     }
 
     .hero-separator {
@@ -1047,7 +1043,6 @@ footer span {
 
     .about-card {
         padding: 1.5rem;
-        /* transform: none !important; */
     }
 
     .about-header h2 {
@@ -1058,18 +1053,15 @@ footer span {
         backdrop-filter: none;
         background: #1a1a1a;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
 
-        .work-grid {
-            grid-template-columns: 1fr;
-        }
+    .work-grid {
+        grid-template-columns: 1fr;
+        perspective: 4000px;
     }
 
     #work {
         padding: 4rem 5vw 3rem;
-    }
-
-    .work-grid {
-        perspective: 4000px;
     }
 
     .contact-wrapper {
