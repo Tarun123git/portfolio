@@ -1,46 +1,43 @@
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.config({ ignoreMobileResize: true });
-// CURSOR (desktop / mouse-only)
+// CURSOR
 const cursor = document.querySelector("#cursor");
-const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
-if (!isTouchDevice) {
-    window.addEventListener("mousemove",(e)=>{
+window.addEventListener("mousemove",(e)=>{
 
-        gsap.to(cursor,{
-            x:e.clientX,
-            y:e.clientY,
-            duration:0.15,
-            ease:"power3.out"
+    gsap.to(cursor,{
+        x:e.clientX,
+        y:e.clientY,
+        duration:0.15,
+        ease:"power3.out"
+    });
+
+});
+document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>{
+
+    elem.addEventListener("mouseenter",()=>{
+
+        gsap.to("#cursor",{
+            scale:1.4,
+            backgroundColor:"rgba(138,43,226,0.15)",
+            duration:0.3
         });
 
     });
-    document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>{
 
-        elem.addEventListener("mouseenter",()=>{
+    elem.addEventListener("mouseleave",()=>{
 
-            gsap.to("#cursor",{
-                scale:1.4,
-                backgroundColor:"rgba(138,43,226,0.15)",
-                duration:0.3
-            });
-
-        });
-
-        elem.addEventListener("mouseleave",()=>{
-
-            gsap.to("#cursor",{
-                scale:1,
-                backgroundColor:"transparent",
-                duration:0.3
-            });
-
+        gsap.to("#cursor",{
+            scale:1,
+            backgroundColor:"transparent",
+            duration:0.3
         });
 
     });
-}
 
-// Hide cursor when focusing form fields (fixes mobile tap ghost cursor)
+});
+
+// Hide cursor only when form fields are focused (mobile keyboard tap fix)
 document.querySelectorAll("input, textarea").forEach((field) => {
     field.addEventListener("focus", () => {
         gsap.to(cursor, { opacity: 0, duration: 0.2 });
