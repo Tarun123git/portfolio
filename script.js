@@ -1,40 +1,53 @@
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.config({ ignoreMobileResize: true });
-// CURSOR
+// CURSOR (desktop / mouse-only)
 const cursor = document.querySelector("#cursor");
+const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
-window.addEventListener("mousemove",(e)=>{
+if (!isTouchDevice) {
+    window.addEventListener("mousemove",(e)=>{
 
-    gsap.to(cursor,{
-        x:e.clientX,
-        y:e.clientY,
-        duration:0.15,
-        ease:"power3.out"
-    });
-
-});
-document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>{
-
-    elem.addEventListener("mouseenter",()=>{
-
-        gsap.to("#cursor",{
-            scale:1.4,
-            backgroundColor:"rgba(138,43,226,0.15)",
-            duration:0.3
+        gsap.to(cursor,{
+            x:e.clientX,
+            y:e.clientY,
+            duration:0.15,
+            ease:"power3.out"
         });
 
     });
+    document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>{
 
-    elem.addEventListener("mouseleave",()=>{
+        elem.addEventListener("mouseenter",()=>{
 
-        gsap.to("#cursor",{
-            scale:1,
-            backgroundColor:"transparent",
-            duration:0.3
+            gsap.to("#cursor",{
+                scale:1.4,
+                backgroundColor:"rgba(138,43,226,0.15)",
+                duration:0.3
+            });
+
+        });
+
+        elem.addEventListener("mouseleave",()=>{
+
+            gsap.to("#cursor",{
+                scale:1,
+                backgroundColor:"transparent",
+                duration:0.3
+            });
+
         });
 
     });
+}
 
+// Hide cursor when focusing form fields (fixes mobile tap ghost cursor)
+document.querySelectorAll("input, textarea").forEach((field) => {
+    field.addEventListener("focus", () => {
+        gsap.to(cursor, { opacity: 0, duration: 0.2 });
+    });
+    field.addEventListener("blur", () => {
+        gsap.to(cursor, { opacity: 1, duration: 0.2 });
+    });
 });
 
 // STAR CANVAS
