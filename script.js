@@ -35,9 +35,22 @@ gsap.ticker.lagSmoothing(0);
     const currentFrame = index =>
         `${imgFolder}ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`;
 
-    const images = [];
+    // Phones jank on this animation for two reasons: (1) drawing a plain
+    // <img> to canvas forces the browser to synchronously decode that JPEG
+    // on the main thread the first time it's painted, which stalls the
+    // scroll handler; (2) pushing a full-DPR canvas's worth of pixels every
+    // frame is expensive fill-rate work on weaker mobile GPUs. Both are
+    // fixed below — decode is moved off-thread via createImageBitmap, and
+    // the backing canvas resolution is reduced on phones (CSS still shows
+    // it full-bleed, the browser just upscales a smaller buffer).
+    const canDecodeOffThread = typeof createImageBitmap === 'function';
+    const RES_SCALE = isDesktop ? 1 : 0.75;
+
+    const images = [];   // <img> elements — network cache + fallback draw source
+    const bitmaps = [];  // pre-decoded ImageBitmap per frame, once ready
     const imageSeq = { frame: 0 };
-    let activeImage = null;
+    let activeIndex = -1;   // index of the frame currently painted
+    let activeSource = null; // the actual drawable (bitmap or img) in use
     let loadedCount = 0;
 
     // Loading overlay
@@ -57,23 +70,27 @@ gsap.ticker.lagSmoothing(0);
     }
 
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        geom = activeImage ? computeGeometry() : null;
-        render();
+        canvas.width = Math.round(window.innerWidth * RES_SCALE);
+        canvas.height = Math.round(window.innerHeight * RES_SCALE);
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = isDesktop ? 'high' : 'low';
+        geom = activeSource ? computeGeometry() : null;
+        render(true);
     }
 
     // Cache of draw geometry — only depends on canvas size + the current
     // image's aspect ratio, both of which only change on resize or when
-    // activeImage changes. Recalculating this on every scroll frame was
+    // activeSource changes. Recalculating this on every scroll frame was
     // wasted work since it's almost always the same value.
     let geom = null;
 
     function computeGeometry() {
-        if (!activeImage) return null;
+        if (!activeSource) return null;
         const w = canvas.width;
         const h = canvas.height;
-        const imgRatio = activeImage.naturalWidth / activeImage.naturalHeight;
+        const naturalW = activeSource.naturalWidth || activeSource.width;
+        const naturalH = activeSource.naturalHeight || activeSource.height;
+        const imgRatio = naturalW / naturalH;
         const canvasRatio = w / h;
 
         let renderWidth, renderHeight, offsetX, offsetY;
@@ -93,22 +110,33 @@ gsap.ticker.lagSmoothing(0);
         return { w, h, renderWidth, renderHeight, offsetX, offsetY };
     }
 
-    function render() {
-        const img = images[Math.round(imageSeq.frame)];
-        if (img && img.complete && img.naturalWidth !== 0 && img !== activeImage) {
-            activeImage = img;
+    function render(force) {
+        const idx = Math.round(imageSeq.frame);
+        // Skip repaint entirely if the target frame hasn't actually
+        // changed — ScrollTrigger's onUpdate fires on every scroll tick,
+        // but the rounded frame index is often unchanged between ticks.
+        if (!force && idx === activeIndex) return;
+
+        const source = bitmaps[idx] || images[idx];
+        const ready = source && (bitmaps[idx] || (source.complete && source.naturalWidth !== 0));
+        if (!ready) return;
+
+        if (idx !== activeIndex || source !== activeSource) {
+            activeIndex = idx;
+            activeSource = source;
             geom = computeGeometry();
         }
 
-        if (!activeImage || !geom) return;
+        if (!activeSource || !geom) return;
 
         ctx.clearRect(0, 0, geom.w, geom.h);
-        ctx.drawImage(activeImage, geom.offsetX, geom.offsetY, geom.renderWidth, geom.renderHeight);
+        ctx.drawImage(activeSource, geom.offsetX, geom.offsetY, geom.renderWidth, geom.renderHeight);
     }
 
     // Preload all images
     for (let i = 0; i < frameCount; i++) {
         const img = new Image();
+        img.decoding = 'async';
         img.src = currentFrame(i);
         img.onload = () => {
             loadedCount++;
@@ -121,11 +149,20 @@ gsap.ticker.lagSmoothing(0);
                 if (txt) txt.textContent = pct + '%';
             }
             // Show first frame immediately
-            if (i === 0 || (!activeImage && img.complete)) {
-                render();
+            if (i === 0 || (activeIndex === -1 && img.complete)) {
+                render(true);
                 hideLoader();
-            } else if (imageSeq.frame === i) {
-                render();
+            } else if (Math.round(imageSeq.frame) === i) {
+                render(true);
+            }
+
+            // Decode off the main thread so the eventual canvas draw during
+            // scroll is a cheap blit instead of a jank-causing JPEG decode.
+            if (canDecodeOffThread) {
+                createImageBitmap(img).then(bmp => {
+                    bitmaps[i] = bmp;
+                    if (Math.round(imageSeq.frame) === i) render(true);
+                }).catch(() => { /* fall back to drawing the <img> directly */ });
             }
         };
         images.push(img);
