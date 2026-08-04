@@ -24,8 +24,29 @@ gsap.ticker.add((time) => {
 });
 gsap.ticker.lagSmoothing(0);
 
-// 147-FRAME IMAGE SEQUENCE SCROLL BACKGROUND
+// 147-FRAME IMAGE SEQUENCE SCROLL BACKGROUND — DESKTOP ONLY.
+// On phones this is skipped entirely: no 147 images are downloaded or
+// decoded, the canvas never activates, and each page section just shows
+// its normal flat background (already defined in CSS) instead.
 (function () {
+    const loader = document.getElementById('loading-overlay');
+
+    if (!isDesktop) {
+        if (loader) {
+            const bar = loader.querySelector('.loader-bar-fill');
+            const txt = loader.querySelector('.loader-pct');
+            if (bar) bar.style.width = '100%';
+            if (txt) txt.textContent = '100%';
+            // Still shows briefly for a smooth, intentional entrance rather
+            // than an instant flash, but with nothing heavy to wait on.
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                window.dispatchEvent(new Event('loaderComplete'));
+            }, 900);
+        }
+        return;
+    }
+
     const canvas = document.getElementById('canvas-bg');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -54,7 +75,6 @@ gsap.ticker.lagSmoothing(0);
     let loadedCount = 0;
 
     // Loading overlay
-    const loader = document.getElementById('loading-overlay');
     const loadStartTime = Date.now();
     const MIN_LOADER_TIME = 2600; // ms — loader stays up at least this long,
                                    // even if frames finish loading instantly
