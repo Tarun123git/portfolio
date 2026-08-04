@@ -345,7 +345,7 @@ body {
     height: 100vh;
     background: rgba(10, 10, 10, 0.97);
     padding: 5rem 2rem 2rem;
-    z-index: 1001;
+    z-index: 1000001; /* above #nav (999999) so its close button is actually clickable */
     transform: translateX(100%);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -361,7 +361,7 @@ body {
     font-size: 2rem;
     cursor: pointer;
     color: white;
-    z-index: 1002;
+    z-index: 1000002;
     line-height: 1;
 }
 
@@ -1089,8 +1089,8 @@ footer span {
 
     #hello {
         flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
+        align-items: center;
+        text-align: center;
         padding: 100px 5vw 2rem;
         gap: 1.2rem;
         height: auto;
@@ -1098,7 +1098,7 @@ footer span {
     }
 
     .hello-text {
-        align-items: flex-start;
+        align-items: center;
         max-width: 100%;
         gap: 1rem;
     }
