@@ -1,44 +1,255 @@
 gsap.registerPlugin(ScrollTrigger);
 ScrollTrigger.config({ ignoreMobileResize: true });
-// CURSOR
+
+// Shared device check — the custom cursor, magnetic hover, and tilt
+// effects are desktop-pointer interactions and should never attach on
+// phones, both because touch has no "hover" and to avoid wasted
+// event listeners / GPU layers on lower-power devices.
+const isDesktop = window.innerWidth > 768;
+
+// SMOOTH SCROLL (Lenis) — fixes mouse-wheel jitter and gives the whole
+// site (including the frame sequence) inertia-based easing instead of
+// raw native scroll jumps.
+const lenis = new Lenis({
+    duration: 1.8,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smoothWheel: true,
+    wheelMultiplier: 0.8,
+});
+
+lenis.on('scroll', ScrollTrigger.update);
+
+gsap.ticker.add((time) => {
+    lenis.raf(time * 1000);
+});
+gsap.ticker.lagSmoothing(0);
+
+// 147-FRAME IMAGE SEQUENCE SCROLL BACKGROUND
+(function () {
+    const canvas = document.getElementById('canvas-bg');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const frameCount = 147;
+    const imgFolder = './ezgif-4f1872df9712c541-jpg/';
+    const currentFrame = index =>
+        `${imgFolder}ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`;
+
+    const images = [];
+    const imageSeq = { frame: 0 };
+    let activeImage = null;
+    let loadedCount = 0;
+
+    // Loading overlay
+    const loader = document.getElementById('loading-overlay');
+    const loadStartTime = Date.now();
+    const MIN_LOADER_TIME = 2600; // ms — loader stays up at least this long,
+                                   // even if frames finish loading instantly
+
+    function hideLoader() {
+        if (!loader || loader.classList.contains('hidden')) return;
+        const elapsed = Date.now() - loadStartTime;
+        const remaining = Math.max(0, MIN_LOADER_TIME - elapsed);
+        setTimeout(() => {
+            loader.classList.add('hidden');
+            window.dispatchEvent(new Event('loaderComplete'));
+        }, remaining);
+    }
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        geom = activeImage ? computeGeometry() : null;
+        render();
+    }
+
+    // Cache of draw geometry — only depends on canvas size + the current
+    // image's aspect ratio, both of which only change on resize or when
+    // activeImage changes. Recalculating this on every scroll frame was
+    // wasted work since it's almost always the same value.
+    let geom = null;
+
+    function computeGeometry() {
+        if (!activeImage) return null;
+        const w = canvas.width;
+        const h = canvas.height;
+        const imgRatio = activeImage.naturalWidth / activeImage.naturalHeight;
+        const canvasRatio = w / h;
+
+        let renderWidth, renderHeight, offsetX, offsetY;
+
+        if (canvasRatio > imgRatio) {
+            renderWidth = w;
+            renderHeight = w / imgRatio;
+            offsetX = 0;
+            offsetY = (h - renderHeight) / 2;
+        } else {
+            renderWidth = h * imgRatio;
+            renderHeight = h;
+            offsetX = (w - renderWidth) / 2;
+            offsetY = 0;
+        }
+
+        return { w, h, renderWidth, renderHeight, offsetX, offsetY };
+    }
+
+    function render() {
+        const img = images[Math.round(imageSeq.frame)];
+        if (img && img.complete && img.naturalWidth !== 0 && img !== activeImage) {
+            activeImage = img;
+            geom = computeGeometry();
+        }
+
+        if (!activeImage || !geom) return;
+
+        ctx.clearRect(0, 0, geom.w, geom.h);
+        ctx.drawImage(activeImage, geom.offsetX, geom.offsetY, geom.renderWidth, geom.renderHeight);
+    }
+
+    // Preload all images
+    for (let i = 0; i < frameCount; i++) {
+        const img = new Image();
+        img.src = currentFrame(i);
+        img.onload = () => {
+            loadedCount++;
+            // Update loader progress
+            if (loader) {
+                const pct = Math.round((loadedCount / frameCount) * 100);
+                const bar = loader.querySelector('.loader-bar-fill');
+                const txt = loader.querySelector('.loader-pct');
+                if (bar) bar.style.width = pct + '%';
+                if (txt) txt.textContent = pct + '%';
+            }
+            // Show first frame immediately
+            if (i === 0 || (!activeImage && img.complete)) {
+                render();
+                hideLoader();
+            } else if (imageSeq.frame === i) {
+                render();
+            }
+        };
+        images.push(img);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Fallback: force-dismiss loader after 5s even if images don't load
+    setTimeout(() => {
+        if (loader && !loader.classList.contains('hidden')) {
+            loader.classList.add('hidden');
+            window.dispatchEvent(new Event('loaderComplete'));
+        }
+    }, 5000);
+
+    // Fade canvas IN as About section enters — page1 keeps its original bg
+    gsap.to(canvas, {
+        opacity: 1,
+        ease: "none",
+        scrollTrigger: {
+            trigger: "#page2",
+            start: "top 80%",
+            end: "top 20%",
+            scrub: 0.8
+        }
+    });
+
+    // Frame sequence — starts when About enters, completes at bottom of Contact
+    // scrub:2.2 = slower catch-up lag behind scroll position, for a
+    // heavier, more drifting glide rather than instant 1:1 tracking
+    gsap.to(imageSeq, {
+        frame: frameCount - 1,
+        ease: "none",
+        scrollTrigger: {
+            trigger: "#page2",
+            start: "top bottom",
+            endTrigger: "#page4",
+            end: "bottom bottom",
+            scrub: 2.2,
+            onUpdate: render
+        }
+    });
+
+    // Fade canvas OUT after Contact section scrolls away
+    gsap.to(canvas, {
+        opacity: 0,
+        ease: "none",
+        scrollTrigger: {
+            trigger: "#page4",
+            start: "bottom 70%",
+            end: "bottom top",
+            scrub: 0.8
+        }
+    });
+})();
+
+// CURSOR — desktop only; there's no mouse position on touch devices,
+// and without this gate the circle just sits stuck in a corner on phones.
 const cursor = document.querySelector("#cursor");
 
-window.addEventListener("mousemove",(e)=>{
-
-    gsap.to(cursor,{
-        x:e.clientX,
-        y:e.clientY,
-        duration:0.15,
-        ease:"power3.out"
+if (isDesktop) {
+    window.addEventListener("mousemove", (e) => {
+        gsap.to(cursor, {
+            x: e.clientX,
+            y: e.clientY,
+            duration: 0.15,
+            ease: "power3.out"
+        });
     });
 
-});
-document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>{
-
-    elem.addEventListener("mouseenter",()=>{
-
-        gsap.to("#cursor",{
-            scale:1.4,
-            backgroundColor:"rgba(138,43,226,0.15)",
-            duration:0.3
+    document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem) => {
+        elem.addEventListener("mouseenter", () => {
+            gsap.to("#cursor", {
+                scale: 1.4,
+                backgroundColor: "rgba(138,43,226,0.15)",
+                duration: 0.3
+            });
         });
 
-    });
-
-    elem.addEventListener("mouseleave",()=>{
-
-        gsap.to("#cursor",{
-            scale:1,
-            backgroundColor:"transparent",
-            duration:0.3
+        elem.addEventListener("mouseleave", () => {
+            gsap.to("#cursor", {
+                scale: 1,
+                backgroundColor: "transparent",
+                duration: 0.3
+            });
         });
+    });
+}
 
+// MAGNETIC BUTTONS — element subtly pulls toward the cursor as it
+// approaches, then eases back to rest on mouseleave.
+function applyMagnetic(el, strength = 0.4, liftScale = 1.06) {
+    // GSAP owns `transform` on this element while it's active, so any
+    // CSS `:hover { transform: ... }` on it gets overridden — fold the
+    // lift/scale into the animation itself instead.
+    const xTo = gsap.quickTo(el, "x", { duration: 0.5, ease: "power3.out" });
+    const yTo = gsap.quickTo(el, "y", { duration: 0.5, ease: "power3.out" });
+    const scaleTo = gsap.quickTo(el, "scale", { duration: 0.4, ease: "power3.out" });
+
+    el.addEventListener("mouseenter", () => scaleTo(liftScale));
+
+    el.addEventListener("mousemove", (e) => {
+        const rect = el.getBoundingClientRect();
+        const relX = e.clientX - rect.left - rect.width / 2;
+        const relY = e.clientY - rect.top - rect.height / 2;
+        xTo(relX * strength);
+        yTo(relY * strength);
     });
 
-});
+    el.addEventListener("mouseleave", () => {
+        xTo(0);
+        yTo(0);
+        scaleTo(1);
+    });
+}
+
+if (isDesktop) {
+    document.querySelectorAll(".cta-btn, .contact-form button, #nav-links a, #social-sidebar a")
+        .forEach((el) => applyMagnetic(el, el.classList.contains("cta-btn") || el.tagName === "BUTTON" ? 0.35 : 0.5));
+}
 
 // STAR CANVAS
-(function() {
+(function () {
     const canvas = document.getElementById('stars-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -63,7 +274,7 @@ document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>
         }
     }
 
-    function drawStars(t) {
+    function drawStars() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         stars.forEach(s => {
             s.flicker += s.speed * 0.02;
@@ -79,66 +290,79 @@ document.querySelectorAll("a, button, .work-card, .about-card").forEach((elem)=>
     resize();
     createStars(180);
     requestAnimationFrame(drawStars);
-    window.addEventListener('resize', () => { resize(); createStars(180); });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            resize();
+            createStars(180);
+        }, 150);
+    });
 })();
 
-// LETTER ANIMATION (removed - using CSS animations now)
-if (window.innerWidth > 768) {
+// MOUSE TILT FOR HERO TEXT
+if (isDesktop) {
     document.addEventListener("mousemove", (e) => {
         gsap.to(".hello-text", {
-            rotationY: (e.clientX / window.innerWidth - 0.5) * 25,
-            rotationX: -(e.clientY / window.innerHeight - 0.5) * 25,
+            rotationY: (e.clientX / window.innerWidth - 0.5) * 20,
+            rotationX: -(e.clientY / window.innerHeight - 0.5) * 20,
             transformPerspective: 1200,
             transformOrigin: "center",
             duration: 0.8,
             ease: "power3.out"
         });
     });
-} else {
-    gsap.to(".hello-text", {
-        rotationY: 8,
-        rotationX: -8,
-        y: -10,
-        repeat: -1,
-        yoyo: true,
-        duration: 2,
-        ease: "sine.inOut"
-    });
 }
-// ENTRANCE ANIMATION
-const tl = gsap.timeline();
 
-tl.from("#nav h1", {
-    y: 30,
-    opacity: 0,
-    duration: 0.6,
-    ease: "back.out(1.7)"
-})
-    .from("#nav-links a", {
-        y: 30,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.12,
-        ease: "back.out(1.7)",
-        clearProps: "all"
-    }, "-=0.3");
+// ENTRANCE ANIMATION — held until the loader has actually finished, so the
+// nav is guaranteed to be revealed after loading rather than depending on
+// timing luck with the loader's minimum display time.
+function playNavEntrance() {
+    if (playNavEntrance.done) return;
+    playNavEntrance.done = true;
 
+    gsap.set("#nav", { opacity: 1 });
+
+    gsap.timeline()
+        .from("#nav h1", {
+            y: 30,
+            opacity: 0,
+            duration: 0.6,
+            ease: "back.out(1.7)"
+        })
+        .from("#nav-links a", {
+            y: 30,
+            opacity: 0,
+            duration: 0.6,
+            stagger: 0.12,
+            ease: "back.out(1.7)",
+            clearProps: "all"
+        }, "-=0.3");
+}
+
+window.addEventListener('loaderComplete', playNavEntrance, { once: true });
+// Safety net in case the loading overlay is absent or the event never fires
+setTimeout(playNavEntrance, 5200);
 
 const sidebar = document.querySelector("#social-sidebar");
 const glow = document.querySelector("#sidebar-glow");
 
-sidebar.addEventListener("mouseenter", () => {
-    gsap.to(glow, { opacity: 1, duration: 0.3 });
-});
+if (sidebar && glow) {
+    sidebar.addEventListener("mouseenter", () => {
+        gsap.to(glow, { opacity: 1, duration: 0.3 });
+    });
 
-sidebar.addEventListener("mousemove", (e) => {
-    glow.style.left = (e.clientX - 40) + "px";
-    glow.style.top = (e.clientY - 40) + "px";
-});
+    sidebar.addEventListener("mousemove", (e) => {
+        glow.style.left = (e.clientX - 40) + "px";
+        glow.style.top = (e.clientY - 40) + "px";
+    });
 
-sidebar.addEventListener("mouseleave", () => {
-    gsap.to(glow, { opacity: 0, duration: 0.3 });
-});
+    sidebar.addEventListener("mouseleave", () => {
+        gsap.to(glow, { opacity: 0, duration: 0.3 });
+    });
+}
+
 // MOBILE MENU
 const menuBtn = document.getElementById("menu-btn");
 const mobileMenu = document.getElementById("mobile-menu");
@@ -158,12 +382,15 @@ function closeMenu() {
     }, { once: true });
 }
 
-menuBtn.addEventListener("click", openMenu);
-closeBtn.addEventListener("click", closeMenu);
+if (menuBtn && mobileMenu && closeBtn) {
+    menuBtn.addEventListener("click", openMenu);
+    closeBtn.addEventListener("click", closeMenu);
 
-mobileMenu.querySelectorAll("a").forEach(a => {
-    a.addEventListener("click", closeMenu);
-});
+    mobileMenu.querySelectorAll("a").forEach(a => {
+        a.addEventListener("click", closeMenu);
+    });
+}
+
 // ABOUT SECTION ANIMATION
 gsap.from(".about-header h2, .about-line", {
     scrollTrigger: {
@@ -189,189 +416,153 @@ gsap.from(".about-card", {
     ease: "power2.out"
 });
 
-gsap.from(".skill-tag", {
-    scrollTrigger: {
-        trigger: ".skills-grid",
-        start: "top 100%"
-    },
-    y: 20,
-    opacity: 0,
-    duration: 0.5,
-    stagger: 0.1,
-    ease: "back.out(1.7)"
-});
-//ABOUT CARD ANIMATION
-document.querySelectorAll(".about-card").forEach((card) => {
+// ABOUT CARD ANIMATION
+if (isDesktop) {
+    document.querySelectorAll(".about-card").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+            let rect = card.getBoundingClientRect();
+            let x = e.clientX - rect.left - rect.width / 2;
+            let y = e.clientY - rect.top - rect.height / 2;
 
-    card.addEventListener("mousemove", (e) => {
+            gsap.to(card, {
+                rotationY: x / 8,
+                rotationX: -y / 8,
+                transformPerspective: 1000,
+                transformOrigin: "center",
+                scale: 1.03,
+                z: 20,
+                duration: 0.5,
+                ease: "power2.out"
+            });
+        });
 
-        let rect = card.getBoundingClientRect();
-
-        let x = e.clientX - rect.left - rect.width / 2;
-        let y = e.clientY - rect.top - rect.height / 2;
-
-        let rotateValue = window.innerWidth > 768 ? 8 : 18;
-
-        gsap.to(card, {
-            rotationY: x / rotateValue,
-            rotationX: -y / rotateValue,
-            transformPerspective: 1000,
-            transformOrigin: "center",
-            scale: 1.03,
-            z: 20,
-            duration: 0.5,
-            ease: "power2.out"
-        })
-    })
-
-    card.addEventListener("mouseleave", () => {
-
-        gsap.to(card, {
-            rotationY: 0,
-            rotationX: 0,
-            scale: 1,
-            z: 0,
-            duration: 1,
-            ease: "elastic.out(1,0.3)"
-        })
-
-    })
-
-})
-
+        card.addEventListener("mouseleave", () => {
+            gsap.to(card, {
+                rotationY: 0,
+                rotationX: 0,
+                scale: 1,
+                z: 0,
+                duration: 1,
+                ease: "elastic.out(1,0.3)"
+            });
+        });
+    });
+}
 
 // WORK CARD 3D TILT
-document.querySelectorAll(".work-card").forEach((card) => {
+if (isDesktop) {
+    document.querySelectorAll(".work-card").forEach((card) => {
+        let rotateX = gsap.quickTo(card, "rotationX", { duration: 0.5, ease: "power2.out" });
+        let rotateY = gsap.quickTo(card, "rotationY", { duration: 0.5, ease: "power2.out" });
+        let scale = gsap.quickTo(card, "scale", { duration: 0.5, ease: "power2.out" });
 
-    let rotateX = gsap.quickTo(card, "rotationX", {
-        duration: 0.5,
-        ease: "power2.out"
+        card.addEventListener("mousemove", (e) => {
+            let rect = card.getBoundingClientRect();
+            let x = e.clientX - rect.left - rect.width / 2;
+            let y = e.clientY - rect.top - rect.height / 2;
+
+            rotateY(x / 5);
+            rotateX(-y / 5);
+            scale(1.03);
+        });
+
+        card.addEventListener("mouseleave", () => {
+            rotateX(0);
+            rotateY(0);
+            scale(1);
+        });
     });
+}
 
-    let rotateY = gsap.quickTo(card, "rotationY", {
-        duration: 0.5,
-        ease: "power2.out"
-    });
-
-    let scale = gsap.quickTo(card, "scale", {
-        duration: 0.5,
-        ease: "power2.out"
-    });
-
+document.querySelectorAll(".about-card,.work-card").forEach((card) => {
     card.addEventListener("mousemove", (e) => {
-
         let rect = card.getBoundingClientRect();
-
-        let x = e.clientX - rect.left - rect.width / 2;
-        let y = e.clientY - rect.top - rect.height / 2;
-
-        let rotateValue = window.innerWidth > 768 ? 5 : 15;
-
-        rotateY(x / rotateValue);
-        rotateX(-y / rotateValue);
-        scale(1.03);
-    });
-
-    card.addEventListener("mouseleave", () => {
-
-        rotateX(0);
-        rotateY(0);
-        scale(1);
-
-    });
-
-});
-document.querySelectorAll(".about-card,.work-card").forEach((card)=>{
-
-    card.addEventListener("mousemove",(e)=>{
-
-        let rect = card.getBoundingClientRect();
-
         let x = e.clientX - rect.left;
         let y = e.clientY - rect.top;
 
-        card.style.setProperty("--x",`${x}px`);
-        card.style.setProperty("--y",`${y}px`);
-
+        card.style.setProperty("--x", `${x}px`);
+        card.style.setProperty("--y", `${y}px`);
     });
-
-});
-//scroll bar animations
-window.onscroll = () => {
-
-    let totalHeight =
-        document.documentElement.scrollHeight -
-        window.innerHeight;
-
-    let progress =
-        (window.pageYOffset / totalHeight) * 100;
-
-    document.getElementById("progress-bar").style.width =
-        progress + "%";
-
-};
-// Hide cursor on form focus (mobile fix)
-document.querySelectorAll("input, textarea").forEach((field) => {
-  field.addEventListener("focus", () => {
-    cursor.style.display = "none";
-  });
-  field.addEventListener("blur", () => {
-    cursor.style.display = "block";
-  });
 });
 
-// CONTACT FORM - FORMSPREE
-const contactForm = document.querySelector(".contact-form");
-
-contactForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const btn = contactForm.querySelector("button");
-  const name = contactForm.querySelector("input[type='text']").value.trim();
-  const email = contactForm.querySelector("input[type='email']").value.trim();
-  const message = contactForm.querySelector("textarea").value.trim();
-
-  if (!name || !email || !message) {
-    showToast("Please fill in all fields.", "error");
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = `Sending... <i class="ri-loader-4-line"></i>`;
-
-  try {
-    const res = await fetch("https://formspree.io/f/xjgzodow", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, message }),
-    });
-
-    if (res.ok) {
-      showToast("Message sent! I'll get back to you soon.", "success");
-      contactForm.reset();
-    } else {
-      showToast("Something went wrong. Try again.", "error");
+// SCROLL BAR PROGRESS — driven by Lenis's own scroll event instead of a
+// separate window.onscroll listener, so we're not doing two independent
+// scroll-triggered layout reads every frame.
+const progressBar = document.getElementById("progress-bar");
+lenis.on('scroll', ({ scroll, limit }) => {
+    if (progressBar) {
+        const progress = limit > 0 ? (scroll / limit) * 100 : 0;
+        progressBar.style.width = progress + "%";
     }
-  } catch (err) {
-    showToast("Network error. Please try again.", "error");
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = `Send Message <i class="ri-send-plane-line"></i>`;
-  }
 });
+
+// Hide cursor on form focus (desktop only — on mobile the cursor is
+// already hidden entirely via CSS, and this would otherwise force it
+// back to display:block on blur, fighting that media query).
+if (isDesktop) {
+    document.querySelectorAll("input, textarea").forEach((field) => {
+        field.addEventListener("focus", () => {
+            if (cursor) cursor.style.display = "none";
+        });
+        field.addEventListener("blur", () => {
+            if (cursor) cursor.style.display = "block";
+        });
+    });
+}
+
+// CONTACT FORM
+const contactForm = document.querySelector(".contact-form");
+if (contactForm) {
+    contactForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const btn = contactForm.querySelector("button");
+        const name = contactForm.querySelector("input[type='text']").value.trim();
+        const email = contactForm.querySelector("input[type='email']").value.trim();
+        const message = contactForm.querySelector("textarea").value.trim();
+
+        if (!name || !email || !message) {
+            showToast("Please fill in all fields.", "error");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `Sending... <i class="ri-loader-4-line"></i>`;
+
+        try {
+            const res = await fetch("https://formspree.io/f/xjgzodow", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, message }),
+            });
+
+            if (res.ok) {
+                showToast("Message sent! I'll get back to you soon.", "success");
+                contactForm.reset();
+            } else {
+                showToast("Something went wrong. Try again.", "error");
+            }
+        } catch (err) {
+            showToast("Network error. Please try again.", "error");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `Send Message <i class="ri-send-plane-line"></i>`;
+        }
+    });
+}
 
 function showToast(msg, type) {
-  const existing = document.querySelector(".toast");
-  if (existing) existing.remove();
+    const existing = document.querySelector(".toast");
+    if (existing) existing.remove();
 
-  const toast = document.createElement("div");
-  toast.className = `toast toast-${type}`;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    toast.textContent = msg;
+    document.body.appendChild(toast);
 
-  setTimeout(() => toast.classList.add("toast-visible"), 10);
-  setTimeout(() => {
-    toast.classList.remove("toast-visible");
-    setTimeout(() => toast.remove(), 400);
-  }, 3500);
+    setTimeout(() => toast.classList.add("toast-visible"), 10);
+    setTimeout(() => {
+        toast.classList.remove("toast-visible");
+        setTimeout(() => toast.remove(), 400);
+    }, 3500);
 }

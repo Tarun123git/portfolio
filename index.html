@@ -20,42 +20,66 @@
 </head>
 
 <body>
+    <!-- Background Canvas for 147-frame image scroll sequence -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay">
+        <div class="loader-inner">
+            <div class="loader-logo-wrap">
+                <div class="loader-ring"></div>
+                <div class="loader-logo">ST</div>
+            </div>
+            <p class="loader-label">Loading Experience<span class="loader-dots"><span>.</span><span>.</span><span>.</span></span></p>
+            <div class="loader-bar">
+                <div class="loader-bar-fill"></div>
+            </div>
+            <span class="loader-pct">0%</span>
+        </div>
+    </div>
+
     <div id="cursor"></div>
     <div id="progress-bar"></div>
+    <!-- Moved out of #page1: #page1 needs position+z-index to layer above
+         #canvas-bg, which makes it its own stacking context. Fixed elements
+         nested inside it (nav/sidebar/mobile menu) would get painted UNDER
+         #page2/#page3/#page4 once you scroll past the hero, despite their
+         own huge z-index values. Keeping them as direct <body> children
+         fixes that. -->
+    <div id="nav">
+        <h1>ST</h1>
+        <div id="nav-links">
+            <a href="mailto:hellotarun7890@gmail.com">hellotarun7890@gmail.com</a>
+            <a href="#about">ABOUT</a>
+            <a href="#work">WORK</a>
+            <a href="#contact">CONTACT</a>
+        </div>
+        <i class="ri-menu-3-line" id="menu-btn"></i>
+    </div>
+
+    <div id="social-sidebar">
+        <a href="https://github.com/Tarun123git" target="_blank"><i class="ri-github-line"></i></a>
+        <a href="https://www.linkedin.com/in/tarunsavalapurapu/" target="_blank"><i
+                class="ri-linkedin-line"></i></a>
+        <a href="https://twitter.com/Tarun8121" target="_blank"><i class="ri-twitter-x-line"></i></a>
+        <a href="https://www.instagram.com/star_run2005/" target="_blank"><i class="ri-instagram-line"></i></a>
+    </div>
+
+    <div id="mobile-menu">
+        <i class="ri-close-line" id="mobile-close"></i>
+        <a href="mailto:hellotarun7890@gmail.com">GMAIL</a>
+        <a href="#about">ABOUT</a>
+        <a href="#work">WORK</a>
+        <a href="#contact">CONTACT</a>
+    </div>
+
     <div id="page1">
-        <!-- Star canvas background -->
+        <!-- Star canvas background (subtle overlay) -->
         <canvas id="stars-canvas"></canvas>
 
         <!-- Purple glow orbs -->
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
-
-        <div id="nav">
-            <h1>ST</h1>
-            <div id="nav-links">
-                <a href="mailto:hellotarun7890@gmail.com">hellotarun7890@gmail.com</a>
-                <a href="#about">ABOUT</a>
-                <a href="#work">WORK</a>
-                <a href="#contact">CONTACT</a>
-            </div>
-            <i class="ri-menu-3-line" id="menu-btn"></i>
-        </div>
-
-        <div id="social-sidebar">
-            <a href="https://github.com/Tarun123git" target="_blank"><i class="ri-github-line"></i></a>
-            <a href="https://www.linkedin.com/in/tarunsavalapurapu/" target="_blank"><i
-                    class="ri-linkedin-line"></i></a>
-            <a href="https://twitter.com/Tarun8121" target="_blank"><i class="ri-twitter-x-line"></i></a>
-            <a href="https://www.instagram.com/star_run2005/" target="_blank"><i class="ri-instagram-line"></i></a>
-        </div>
-
-        <div id="mobile-menu">
-            <i class="ri-close-line" id="mobile-close"></i>
-            <a href="mailto:hellotarun7890@gmail.com">GMAIL</a>
-            <a href="#about">ABOUT</a>
-            <a href="#work">WORK</a>
-            <a href="#contact">CONTACT</a>
-        </div>
 
         <div id="hello">
             <div class="hello-text">
@@ -220,7 +244,7 @@
                 <div class="contact-left">
                     <h3>Let's Build Something Amazing Together</h3>
                     <p>I'm always open to new opportunities, collaborations, and exciting projects. Whether you have a
-                        idea, a project in mind, or just want to say hi — my inbox is always open. Let's turn ideas into
+                        idea, a project in mind, or just want to say hi &mdash; my inbox is always open. Let's turn ideas into
                         reality!</p>
 
                     <div class="contact-links">
@@ -272,6 +296,7 @@
         integrity="sha512-NcZdtrT77bJr4STcmsGAESr06BYGE8woZdSdEgqnpyqac7sugNO+Tr4bGwGF3MsnEkGKhU2KL2xh6Ec+BqsaHA=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 
     <script src="script.js"></script>
 </body>
