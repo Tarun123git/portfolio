@@ -65,13 +65,15 @@ gsap.ticker.lagSmoothing(0);
     // the backing canvas resolution is reduced on phones (CSS still shows
     // it full-bleed, the browser just upscales a smaller buffer).
     const canDecodeOffThread = typeof createImageBitmap === 'function';
-    const RES_SCALE = isDesktop ? 1 : 0.75;
+    const DPR = Math.min(window.devicePixelRatio || 1, 2); // capped so 3x phones don't overpay for it
+    const RES_SCALE = isDesktop ? DPR : 0.75;
 
     const images = [];   // <img> elements — network cache + fallback draw source
     const bitmaps = [];  // pre-decoded ImageBitmap per frame, once ready
     const imageSeq = { frame: 0 };
-    let activeIndex = -1;   // index of the frame currently painted
-    let activeSource = null; // the actual drawable (bitmap or img) in use
+    let activeLower = -1;     // nearest frame index currently painted as the base layer
+    let activeAlpha = -1;     // fractional blend amount toward the adjacent frame
+    let activeSource = null;  // the base-layer drawable (bitmap or img) in use
     let loadedCount = 0;
 
     // Loading overlay
@@ -130,27 +132,57 @@ gsap.ticker.lagSmoothing(0);
         return { w, h, renderWidth, renderHeight, offsetX, offsetY };
     }
 
+    function isReady(source, idx) {
+        return source && (bitmaps[idx] || (source.complete && source.naturalWidth !== 0));
+    }
+
+    // How much of the gap between two frames gets cross-faded. Blending
+    // across the *whole* gap (old behavior) meant the image was a 50/50
+    // blend of two different frames most of the time — that's what read
+    // as "blurry". Narrowing this to a small window right at the switch
+    // point keeps frames crisp and single almost all the time, while still
+    // smoothing the actual cut so it doesn't hard-snap.
+    const BLEND_WINDOW = 0.22;
+
     function render(force) {
-        const idx = Math.round(imageSeq.frame);
-        // Skip repaint entirely if the target frame hasn't actually
+        const frame = imageSeq.frame;
+        const nearest = Math.max(0, Math.min(frameCount - 1, Math.round(frame)));
+        const dist = frame - nearest; // -0.5..0.5, how far off-center we are
+        const towardNext = dist > 0;
+        const neighbor = Math.max(0, Math.min(frameCount - 1, nearest + (towardNext ? 1 : -1)));
+        const edge = Math.abs(dist);
+        const blend = edge > BLEND_WINDOW ? 0 : (BLEND_WINDOW - edge) / BLEND_WINDOW * 0.5;
+
+        // Skip repaint entirely if the target frame/blend hasn't actually
         // changed — ScrollTrigger's onUpdate fires on every scroll tick,
-        // but the rounded frame index is often unchanged between ticks.
-        if (!force && idx === activeIndex) return;
+        // but the value is often imperceptibly different between ticks.
+        if (!force && nearest === activeLower && Math.abs(blend - activeAlpha) < 0.004) return;
 
-        const source = bitmaps[idx] || images[idx];
-        const ready = source && (bitmaps[idx] || (source.complete && source.naturalWidth !== 0));
-        if (!ready) return;
+        const baseSource = bitmaps[nearest] || images[nearest];
+        if (!isReady(baseSource, nearest)) return;
 
-        if (idx !== activeIndex || source !== activeSource) {
-            activeIndex = idx;
-            activeSource = source;
+        if (nearest !== activeLower || baseSource !== activeSource) {
+            activeLower = nearest;
+            activeSource = baseSource;
             geom = computeGeometry();
         }
 
         if (!activeSource || !geom) return;
 
         ctx.clearRect(0, 0, geom.w, geom.h);
+        ctx.globalAlpha = 1;
         ctx.drawImage(activeSource, geom.offsetX, geom.offsetY, geom.renderWidth, geom.renderHeight);
+
+        if (blend > 0.01 && neighbor !== nearest) {
+            const neighborSource = bitmaps[neighbor] || images[neighbor];
+            if (isReady(neighborSource, neighbor)) {
+                ctx.globalAlpha = blend;
+                ctx.drawImage(neighborSource, geom.offsetX, geom.offsetY, geom.renderWidth, geom.renderHeight);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        activeAlpha = blend;
     }
 
     // Preload all images
@@ -169,7 +201,7 @@ gsap.ticker.lagSmoothing(0);
                 if (txt) txt.textContent = pct + '%';
             }
             // Show first frame immediately
-            if (i === 0 || (activeIndex === -1 && img.complete)) {
+            if (i === 0 || (activeLower === -1 && img.complete)) {
                 render(true);
                 hideLoader();
             } else if (Math.round(imageSeq.frame) === i) {
@@ -427,11 +459,13 @@ const closeBtn = document.getElementById("mobile-close");
 
 function openMenu() {
     mobileMenu.style.display = "flex";
+    if (menuBtn) menuBtn.classList.add("is-hidden");
     requestAnimationFrame(() => mobileMenu.classList.add("open"));
 }
 
 function closeMenu() {
     mobileMenu.classList.remove("open");
+    if (menuBtn) menuBtn.classList.remove("is-hidden");
     mobileMenu.addEventListener("transitionend", () => {
         if (!mobileMenu.classList.contains("open")) {
             mobileMenu.style.display = "none";
